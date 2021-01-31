@@ -3,7 +3,6 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "hardhat/console.sol";
-import "../interfaces/IOneSplit.sol";
 import "../utils/UniversalERC20.sol";
 import { IFlashLoanReceiver, ILendingPoolAddressesProvider, ILendingPool } from "../interfaces/IFlashLoan.sol";
 
@@ -21,13 +20,10 @@ contract ETHDAI is IFlashLoanReceiver{
     }
 
     Status public status;
-
-    IOneSplit split = IOneSplit(0x50FDA034C0Ce7a8f7EFDAebDA7Aa7cA21CC1267e); // 1split.eth
     ILendingPoolAddressesProvider public override ADDRESSES_PROVIDER = ILendingPoolAddressesProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
     ILendingPool public override LENDING_POOL = ILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
 
     address aave;
-    address oneInch;
     address uni;
 
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -35,11 +31,8 @@ contract ETHDAI is IFlashLoanReceiver{
     address public constant AETH_ADDRESS = 0x3a3A65aAb0dd2A17E3F1947bA16138cd37d08c04; // V1
     address public constant ADAI_ADDRESS = 0xfC1E690f61EFd961294b3e1Ce3313fBD8aa4f85d; // V1
     
-
-    // constructor(AaveLogic _aave, UniswapLogic _uni){
-    constructor(address _aave, address _oneInch, address _uni){
+    constructor(address _aave, address _uni){
         aave = _aave;
-        oneInch = _oneInch;
         uni = _uni;
     }
 
@@ -115,20 +108,6 @@ contract ETHDAI is IFlashLoanReceiver{
 
         // Deposit swapped ETH to Aave
         deposit(ETH_ADDRESS, ethBalance);
-
-        // // Swap DAI for ETH in 1Inch
-        // (success, ) = 
-        //     oneInch.delegatecall(
-        //         abi.encodeWithSignature(
-        //             "swap(address,address,uint256,uint256,uint256[])",
-        //             DAI_ADDRESS,
-        //             ETH_ADDRESS, 
-        //             uint(-1),
-        //             0,
-        //             // distribution
-        //             [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]
-        //         ));
-        // require(success);
         
     }
 
@@ -151,20 +130,6 @@ contract ETHDAI is IFlashLoanReceiver{
 
         uint daiBalance = getBalance(DAI_ADDRESS);
         console.log("DAI amount", daiBalance);
-
-        // // Swap DAI for ETH in 1Inch
-        // (success, ) = 
-        //     oneInch.delegatecall(
-        //         abi.encodeWithSignature(
-        //             "swap(address,address,uint256,uint256,uint256[])",
-        //             DAI_ADDRESS,
-        //             ETH_ADDRESS, 
-        //             uint(-1),
-        //             0,
-        //             // distribution
-        //             [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]
-        //         ));
-        // require(success);
 
         // Deposit swapped DAI to Aave
         deposit(DAI_ADDRESS, daiBalance);
@@ -327,9 +292,7 @@ contract ETHDAI is IFlashLoanReceiver{
         4. Swaps all collateral for debt token
         5. Repays flashloan
         6. Ends up with same debt token
-     */
-    
-    
+     */   
     function repayDebt(address asset, uint amount) public {
         address receiverAddress = address(this);
 
