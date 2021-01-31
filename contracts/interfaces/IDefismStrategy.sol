@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.7.0;
 
-interface DefismStrategy{
+interface IDefismStrategy{
     function longEth() external;
     function closeLongEth() external;
     function swapEthForDai() external;
