@@ -8,7 +8,7 @@ interface DefismStrategy{
     function swapDaiForEth() external;
     function closeShortETH() external;
     function shortETH() external;
-    function withdraw(address receiveToken, uint amountDfsm) external returns (uint amountToBurn);
-    function deposit(address token, uint amount) external returns (uint amountToMint);
+    function withdraw(address token, uint amountDfsm) external;
+    function deposit(address token, uint amount) external;
     function reserves() external returns (uint amountDai, uint amountETH);
 }

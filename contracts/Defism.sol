@@ -92,6 +92,14 @@ contract Defism is ERC20, Ownable{
         //might be a bug here
     }
 
+    /** function deposit(address token, uint amount) external{
+        require(state == States.HoldDai || state == States.HoldEth, "State doesn't allow deposits");
+    }
+        function withdraw(address token, uint amount) external{
+        require(state == States.HoldDai || state == States.HoldEth, "State doesn't allow withdrawals");
+    }
+    **/
+
     //function createProposal()
 
     //function voteProposal()
