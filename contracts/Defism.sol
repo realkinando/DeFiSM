@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./DefismStrategy.sol";
+import "./interfaces/IDefismStrategy.sol";
 
 contract Defism is ERC20, Ownable{
 
@@ -20,23 +20,23 @@ contract Defism is ERC20, Ownable{
     }
 
     States public state;
-    DefismStrategy strategy;
+    IDefismStrategy strategy;
     uint16 minVoteBP;
     uint lastProposalExecuted;
 
     mapping(address => address) public delegates;
-    mapping(address => uint) public addressVotes;
+    mapping(address => uint) public votes;
     mapping(uint => Proposal) public proposals;
 
-    constructor(States initial, address strategyAddress, uint16 _minVoteBP) public{
+    constructor(States initial, address strategyAddress, uint16 _minVoteBP) ERC20("DefiSM","DSM") public{
         state = initial;
-        strategy = DefismStrategy(strategyAddress);
+        strategy = IDefismStrategy(strategyAddress);
         require(_minVoteBP < 10001);
         minVoteBP = _minVoteBP;
     }
 
     function setStrategy(address strategyAddress) external onlyOwner{
-        strategy = DefismStrategy(strategyAddress);
+        strategy = IDefismStrategy(strategyAddress);
         //emit event
     }
 
@@ -46,14 +46,14 @@ contract Defism is ERC20, Ownable{
         //emit event
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual{
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override{
         if (delegates[from]!=address(0)){
             votes[delegates[from]]-=amount;
         }
         else{
             votes[from]-=amount;
         }
-        if (delegate[to]!=address(0)){
+        if (delegates[to]!=address(0)){
             votes[delegates[to]]+=amount;
         }
         else{
@@ -78,14 +78,14 @@ contract Defism is ERC20, Ownable{
         //emit event
     }
 
-    function getReserves() external view returns (uint amountDai, uint amountETH){
-        (bool success, bytes memory result) = strategy.delegateCall(abi.encodeWithSignature("reserves()"));
+    function getReserves() public returns (uint amountDai, uint amountETH){
+        (bool success, bytes memory result) = address(strategy).delegatecall(abi.encodeWithSignature("reserves()"));
         require(success, "Reserves() delegate call failed");
         return abi.decode(result, (uint,uint));
     }
 
-    function getTokenValue() external view returns (uint valueDai, uint valueETH){
-        (bool success, bytes memory result) = strategy.delegateCall(abi.encodeWithSignature("reserves()"));
+    function getTokenValue() public returns (uint valueDai, uint valueETH){
+        (bool success, bytes memory result) = address(strategy).delegatecall(abi.encodeWithSignature("reserves()"));
         require(success, "Reserves() delegate call failed");
         (uint amountDai, uint amountETH) = abi.decode(result, (uint,uint));
         return (amountDai/totalSupply(), amountETH/totalSupply());
@@ -113,15 +113,15 @@ contract Defism is ERC20, Ownable{
 
         if(newState == States.LongEth){
             require(state == States.LongEth || state == States.HoldEth,"Invalid state transistion");
-            (success, result) = strategy.delegateCall(abi.encodeWithSignature("longEth()"));
+            (success, result) = address(strategy).delegatecall(abi.encodeWithSignature("longEth()"));
         }
 
         else if(newState == States.HoldEth){
             if(state == States.LongEth){
-                (success, result) = strategy.delegateCall(abi.encodeWithSignature("closeLongEth()"));
+                (success, result) = address(strategy).delegatecall(abi.encodeWithSignature("closeLongEth()"));
             }
             else if(state == States.HoldDai){
-                (success, result) = strategy.delegateCall(abi.encodeWithSignature("swapDaiForEth()"));
+                (success, result) = address(strategy).delegatecall(abi.encodeWithSignature("swapDaiForEth()"));
             }
             else{
                 revert("Invalid state transistion");
@@ -130,10 +130,10 @@ contract Defism is ERC20, Ownable{
 
         else if(newState == States.HoldDai){
             if(state == States.HoldEth){
-                (success, result) = strategy.delegateCall(abi.encodeWithSignature("swapEthForDai()"));
+                (success, result) = address(strategy).delegatecall(abi.encodeWithSignature("swapEthForDai()"));
             }
             else if(state == States.ShortEth){
-                (success, result) = strategy.delegateCall(abi.encodeWithSignature("closeShortEth()"));
+                (success, result) = address(strategy).delegatecall(abi.encodeWithSignature("closeShortEth()"));
             }
             else{
                 revert("Invalid state transistion");
@@ -142,7 +142,7 @@ contract Defism is ERC20, Ownable{
 
         else{
             require(state == States.ShortEth || state == States.HoldDai,"Invalid state transistion");
-            (success, result) = strategy.delegateCall(abi.encodeWithSignature("shortEth()"));
+            (success, result) = address(strategy).delegatecall(abi.encodeWithSignature("shortEth()"));
         }
 
         require(success);
