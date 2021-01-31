@@ -1,5 +1,9 @@
 {
   "name": "hardhat-project",
+  "scripts": {
+    "test": "hardhat test ./test/strategy.test.js",
+    "compile": "hardhat compile"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
